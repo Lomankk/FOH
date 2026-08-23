@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import os
+
+updated_html = """<!DOCTYPE html>
 <html lang="tr">
 
 <head>
@@ -7,6 +9,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>F.Ö.H | Fındık Özel Harekât</title>
+
+    <!-- Firebase SDK (Sohbet Altyapısı İçin) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
 
@@ -435,9 +441,30 @@
             letter-spacing: 2px;
         }
 
+        .chat-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
         .online-count {
             color: #777;
             font-size: 12px;
+        }
+
+        .btn-change-nick {
+            background: transparent;
+            border: 1px solid #303830;
+            color: #aaa;
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-change-nick:hover {
+            border-color: #c7a43b;
+            color: #c7a43b;
         }
 
         .chat-messages {
@@ -1117,7 +1144,10 @@
 
                 <div class="chat-header">
                     <h3>F.Ö.H / EKİP SOHBETİ</h3>
-                    <span class="online-count" id="currentNick"></span>
+                    <div class="chat-header-actions">
+                        <span class="online-count" id="currentNick"></span>
+                        <button class="btn-change-nick" onclick="changeNick()">NICK DEĞİŞTİR</button>
+                    </div>
                 </div>
 
                 <div class="chat-messages" id="chatMessages">
@@ -1173,8 +1203,6 @@
 
     function showPage(pageId, button) {
 
-        // Tüm sayfaları gizle
-
         const pages =
             document.querySelectorAll(".page");
 
@@ -1184,15 +1212,9 @@
 
         });
 
-
-        // Seçilen sayfayı aç
-
         document
             .getElementById(pageId)
             .classList.add("active");
-
-
-        // Aktif sekmeyi değiştir
 
         const tabs =
             document.querySelectorAll(".tab");
@@ -1203,91 +1225,162 @@
 
         });
 
-
         button.classList.add("active");
 
     }
 
+    /* FIREBASE YAPILANDIRMASI */
+    // Ücretsiz Firebase Console (https://console.firebase.google.com/) üzerinden aldığınız bilgileri buraya ekleyin:
+    const firebaseConfig = {
+        apiKey: "FIREBASE_API_KEY_GIRINIZ",
+        authDomain: "PROJE_ADI.firebaseapp.com",
+        databaseURL: "https://PROJE_ADI-default-rtdb.firebaseio.com",
+        projectId: "PROJE_ADI",
+        storageBucket: "PROJE_ADI.appspot.com",
+        messagingSenderId: "SENDER_ID",
+        appId: "APP_ID"
+    };
 
-        // EKİP SOHBETİ - ARAYÜZ PROTOTİPİ
-        // Şimdilik mesajları sadece bu tarayıcıda gösterir.
-        // Gerçek ortak sohbet için Supabase bağlantısı eklenecek.
+    let isFirebaseReady = false;
 
-        let chatNick = localStorage.getItem("fohNick") || "";
+    // Firebase başlatma kontrolü
+    if (firebaseConfig.apiKey !== "FIREBASE_API_KEY_GIRINIZ") {
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+        var messagesRef = database.ref("messages");
+        isFirebaseReady = true;
+    }
 
-        function setNick() {
-            const input = document.getElementById("nickInput");
-            const nick = input.value.trim();
+    let chatNick = localStorage.getItem("fohNick") || "";
 
-            if (!nick) {
-                alert("Lütfen bir nick belirle.");
-                return;
+    function setNick() {
+        const input = document.getElementById("nickInput");
+        const nick = input.value.trim();
+
+        if (!nick) {
+            alert("Lütfen bir nick belirle.");
+            return;
+        }
+
+        chatNick = nick;
+        localStorage.setItem("fohNick", chatNick);
+
+        document.getElementById("nickPanel").style.display = "none";
+        document.getElementById("chatBox").style.display = "flex";
+        document.getElementById("currentNick").textContent = "GİRİŞ: " + chatNick;
+
+        if (isFirebaseReady) {
+            listenMessages();
+        }
+    }
+
+    function changeNick() {
+        localStorage.removeItem("fohNick");
+        chatNick = "";
+        document.getElementById("chatBox").style.display = "none";
+        document.getElementById("nickPanel").style.display = "block";
+        document.getElementById("nickInput").value = "";
+        document.getElementById("nickInput").focus();
+    }
+
+    document.getElementById("nickInput")?.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            setNick();
+        }
+    });
+
+    function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value.trim();
+
+        if (!message || !chatNick) return;
+
+        const now = new Date();
+        const time =
+            String(now.getHours()).padStart(2, "0") +
+            ":" +
+            String(now.getMinutes()).padStart(2, "0");
+
+        if (isFirebaseReady) {
+            // Firebase Veritabanına Anlık Kaydet
+            messagesRef.push({
+                nick: chatNick,
+                text: message,
+                time: time,
+                timestamp: Date.now()
+            });
+        } else {
+            // Firebase kurulu değilse geçici lokal gösterim
+            renderMessage(chatNick, message, time);
+        }
+
+        input.value = "";
+        input.focus();
+    }
+
+    function renderMessage(nick, text, time) {
+        const container = document.getElementById("chatMessages");
+        const item = document.createElement("div");
+        item.className = "chat-message";
+
+        item.innerHTML =
+            '<div class="nick"></div>' +
+            '<div class="text"></div>';
+
+        item.querySelector(".nick").textContent = nick + " ";
+
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "time";
+        timeSpan.textContent = time;
+        item.querySelector(".nick").appendChild(timeSpan);
+
+        item.querySelector(".text").textContent = text;
+
+        container.appendChild(item);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function listenMessages() {
+        if (!isFirebaseReady) return;
+
+        // Daha önce eklenen event listener'ı temizle
+        messagesRef.off();
+
+        // Son 100 mesajı dinle ve canlı olarak ekrana aktar
+        messagesRef.limitToLast(100).on("child_added", function(snapshot) {
+            const data = snapshot.val();
+            renderMessage(data.nick, data.text, data.time);
+        });
+    }
+
+    document.getElementById("messageInput")?.addEventListener(
+        "keydown",
+        function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
             }
-
-            chatNick = nick;
-            localStorage.setItem("fohNick", chatNick);
-
-            document.getElementById("nickPanel").style.display = "none";
-            document.getElementById("chatBox").style.display = "flex";
-            document.getElementById("currentNick").textContent =
-                "GİRİŞ: " + chatNick;
         }
+    );
 
-        function sendMessage() {
-            const input = document.getElementById("messageInput");
-            const message = input.value.trim();
-
-            if (!message || !chatNick) return;
-
-            const container = document.getElementById("chatMessages");
-            const item = document.createElement("div");
-            item.className = "chat-message";
-
-            const now = new Date();
-            const time =
-                String(now.getHours()).padStart(2, "0") +
-                ":" +
-                String(now.getMinutes()).padStart(2, "0");
-
-            item.innerHTML =
-                '<div class="nick"></div>' +
-                '<div class="text"></div>';
-
-            item.querySelector(".nick").textContent =
-                chatNick + " ";
-
-            const timeSpan = document.createElement("span");
-            timeSpan.className = "time";
-            timeSpan.textContent = time;
-            item.querySelector(".nick").appendChild(timeSpan);
-
-            item.querySelector(".text").textContent = message;
-
-            container.appendChild(item);
-            container.scrollTop = container.scrollHeight;
-            input.value = "";
-            input.focus();
+    // Oturum Kontrolü
+    if (chatNick) {
+        document.getElementById("nickPanel").style.display = "none";
+        document.getElementById("chatBox").style.display = "flex";
+        document.getElementById("currentNick").textContent = "GİRİŞ: " + chatNick;
+        
+        if (isFirebaseReady) {
+            listenMessages();
         }
-
-        document.getElementById("messageInput")?.addEventListener(
-            "keydown",
-            function(event) {
-                if (event.key === "Enter") {
-                    sendMessage();
-                }
-            }
-        );
-
-        if (chatNick) {
-            document.getElementById("nickPanel").style.display = "none";
-            document.getElementById("chatBox").style.display = "flex";
-            document.getElementById("currentNick").textContent =
-                "GİRİŞ: " + chatNick;
-        }
+    }
 
 </script>
-
 
 </body>
 
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(updated_html)
+
+print("Güncellenmiş index.html dosyası başarıyla oluşturuldu.")
