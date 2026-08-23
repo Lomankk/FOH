@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F.Ö.H | Fındık Özel Harekât</title>
 
-    <!-- Evrensel Canlı Sohbet Servisi (Ably SDK) -->
-    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <!-- Herkese Açık Canlı Sohbet Kütüphanesi -->
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -277,13 +277,26 @@
         button.classList.add("active");
     }
 
-    // CANLI SOHBET SUNUCUSU BAĞLANTISI (Ably Realtime)
-    const realtime = new Ably.Realtime('4NqJJA.8Pox6w:E2T3YjX2NTh3l93zW18N0m1aYf930e1k_G_G8431930');
-    const channel = realtime.channels.get('foh-global-chat');
+    // HERKESE AÇIK SERVİS (PubNub Demo Keys)
+    const pubnub = new PubNub({
+        publishKey: "pub-c-a7c87c71-2983-49d7-832f-7647895e7d97",
+        subscribeKey: "sub-c-a55e2b02-3b03-11eb-a5a4-566b613143bb",
+        userId: "foh_user_" + Math.floor(Math.random() * 100000)
+    });
+
+    const channelName = "foh_global_channel_v1";
+
+    pubnub.subscribe({ channels: [channelName] });
+
+    pubnub.addListener({
+        message: function(event) {
+            const data = event.message;
+            renderMessage(data.nick, data.text, data.time);
+            saveToHistory(data);
+        }
+    });
 
     let chatNick = localStorage.getItem("fohNick") || "";
-
-    // Daha önceki lokal sohbet geçmişini yükle
     let savedHistory = JSON.parse(localStorage.getItem("fohChatHistory") || "[]");
 
     function setNick() {
@@ -323,19 +336,14 @@
 
         const msgData = { nick: chatNick, text: message, time: time };
 
-        // Canlı kanaldan tüm dünyadaki kullanıcılara yayınla
-        channel.publish("message", msgData);
+        pubnub.publish({
+            channel: channelName,
+            message: msgData
+        });
 
         input.value = "";
         input.focus();
     }
-
-    // Dünya genelinden gelen canlı mesajları dinle
-    channel.subscribe("message", (msg) => {
-        const data = msg.data;
-        renderMessage(data.nick, data.text, data.time);
-        saveToHistory(data);
-    });
 
     function renderMessage(nick, text, time) {
         const container = document.getElementById("chatMessages");
