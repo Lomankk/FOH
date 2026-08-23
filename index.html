@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>F.Ö.H | Fındık Özel Harekât</title>
 
-    <!-- Herkese Açık Canlı Sohbet Kütüphanesi -->
-    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
-
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, Helvetica, sans-serif; background: #101410; color: #e8e8e8; }
@@ -253,7 +250,7 @@
                 <div class="chat-messages" id="chatMessages">
                     <div class="chat-message">
                         <div class="nick">SİSTEM</div>
-                        <div class="text">Evrensel Ekip sohbetine hoş geldin.</div>
+                        <div class="text">Geçici RAM sohbetine hoş geldin. (Sayfayı yenileyince mesajlar silinir)</div>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -277,27 +274,10 @@
         button.classList.add("active");
     }
 
-    // HERKESE AÇIK SERVİS (PubNub Demo Keys)
-    const pubnub = new PubNub({
-        publishKey: "pub-c-a7c87c71-2983-49d7-832f-7647895e7d97",
-        subscribeKey: "sub-c-a55e2b02-3b03-11eb-a5a4-566b613143bb",
-        userId: "foh_user_" + Math.floor(Math.random() * 100000)
-    });
+    // TARAYICI RAM İÇİ CANLI KANAL (Hiçbir sunucu/api gerekmez)
+    const chatChannel = new BroadcastChannel('foh_ram_chat');
 
-    const channelName = "foh_global_channel_v1";
-
-    pubnub.subscribe({ channels: [channelName] });
-
-    pubnub.addListener({
-        message: function(event) {
-            const data = event.message;
-            renderMessage(data.nick, data.text, data.time);
-            saveToHistory(data);
-        }
-    });
-
-    let chatNick = localStorage.getItem("fohNick") || "";
-    let savedHistory = JSON.parse(localStorage.getItem("fohChatHistory") || "[]");
+    let chatNick = "";
 
     function setNick() {
         const input = document.getElementById("nickInput");
@@ -305,17 +285,13 @@
         if (!nick) { alert("Lütfen bir nick belirle."); return; }
 
         chatNick = nick;
-        localStorage.setItem("fohNick", chatNick);
 
         document.getElementById("nickPanel").style.display = "none";
         document.getElementById("chatBox").style.display = "flex";
         document.getElementById("currentNick").textContent = "GİRİŞ: " + chatNick;
-
-        loadSavedHistory();
     }
 
     function changeNick() {
-        localStorage.removeItem("fohNick");
         chatNick = "";
         document.getElementById("chatBox").style.display = "none";
         document.getElementById("nickPanel").style.display = "block";
@@ -336,14 +312,21 @@
 
         const msgData = { nick: chatNick, text: message, time: time };
 
-        pubnub.publish({
-            channel: channelName,
-            message: msgData
-        });
+        // 1. Kendi ekranına mesajı yaz
+        renderMessage(msgData.nick, msgData.text, msgData.time);
+
+        // 2. O an açık olan diğer sekmelere RAM üzerinden gönder
+        chatChannel.postMessage(msgData);
 
         input.value = "";
         input.focus();
     }
+
+    // Diğer açık sekmelerden gelen mesajı yakala ve ekrana bas
+    chatChannel.onmessage = function(event) {
+        const data = event.data;
+        renderMessage(data.nick, data.text, data.time);
+    };
 
     function renderMessage(nick, text, time) {
         const container = document.getElementById("chatMessages");
@@ -364,28 +347,9 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    function saveToHistory(data) {
-        savedHistory.push(data);
-        if (savedHistory.length > 50) savedHistory.shift();
-        localStorage.setItem("fohChatHistory", JSON.stringify(savedHistory));
-    }
-
-    function loadSavedHistory() {
-        savedHistory.forEach(data => {
-            renderMessage(data.nick, data.text, data.time);
-        });
-    }
-
     document.getElementById("messageInput")?.addEventListener("keydown", (e) => {
         if (e.key === "Enter") sendMessage();
     });
-
-    if (chatNick) {
-        document.getElementById("nickPanel").style.display = "none";
-        document.getElementById("chatBox").style.display = "flex";
-        document.getElementById("currentNick").textContent = "GİRİŞ: " + chatNick;
-        loadSavedHistory();
-    }
 </script>
 
 </body>
