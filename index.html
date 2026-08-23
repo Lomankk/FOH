@@ -1,245 +1,1147 @@
-<!DOCTYPE html>
+import os
+
+updated_html = """<!DOCTYPE html>
 <html lang="tr">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>F.Ö.H | Fındık Özel Harekât</title>
 
+    <!-- Firebase SDK (Sohbet Altyapısı İçin) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, Helvetica, sans-serif; background: #101410; color: #e8e8e8; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #101410;
+            color: #e8e8e8;
+        }
+
+        /* ÜST BAR */
 
         header {
-            height: 80px; background: #151b16; border-bottom: 3px solid #c7a43b;
-            display: flex; align-items: center; justify-content: space-between; padding: 0 35px;
-            position: sticky; top: 0; z-index: 100;
+            height: 80px;
+
+            background: #151b16;
+
+            border-bottom: 3px solid #c7a43b;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 35px;
+
+            position: sticky;
+            top: 0;
+
+            z-index: 100;
         }
 
-        .logo { display: flex; align-items: center; gap: 15px; }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
         .logo-symbol {
-            width: 45px; height: 45px; border: 3px solid #c7a43b; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; color: #c7a43b;
-            font-size: 22px; font-weight: bold;
-        }
-        .logo-text h1 { font-size: 24px; letter-spacing: 4px; color: white; }
-        .logo-text p { font-size: 11px; color: #aaa; letter-spacing: 2px; }
+            width: 45px;
+            height: 45px;
 
-        nav { display: flex; gap: 5px; }
+            border: 3px solid #c7a43b;
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #c7a43b;
+
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .logo-text h1 {
+            font-size: 24px;
+
+            letter-spacing: 4px;
+
+            color: white;
+        }
+
+        .logo-text p {
+            font-size: 11px;
+
+            color: #aaa;
+
+            letter-spacing: 2px;
+        }
+
+
+        /* SEKME MENÜSÜ */
+
+        nav {
+            display: flex;
+            gap: 5px;
+        }
+
         nav button {
-            background: transparent; border: none; color: #aaa; padding: 30px 18px;
-            font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        nav button:hover { color: white; background: #202820; }
-        nav button.active { color: #c7a43b; border-bottom: 3px solid #c7a43b; }
+            background: transparent;
 
-        main { max-width: 1200px; margin: auto; padding: 45px 25px; }
-        .page { display: none; }
-        .page.active { display: block; }
+            border: none;
+
+            color: #aaa;
+
+            padding: 30px 18px;
+
+            font-size: 14px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        nav button:hover {
+            color: white;
+            background: #202820;
+        }
+
+        nav button.active {
+            color: #c7a43b;
+
+            border-bottom: 3px solid #c7a43b;
+        }
+
+
+        /* ANA İÇERİK */
+
+        main {
+            max-width: 1200px;
+
+            margin: auto;
+
+            padding: 45px 25px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+
+        /* HERO */
 
         .hero {
-            min-height: 380px; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; text-align: center; border: 1px solid #343b34;
-            background: linear-gradient(135deg, #151b16, #0c0f0d); position: relative;
+            min-height: 380px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            text-align: center;
+
+            border: 1px solid #343b34;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #151b16,
+                    #0c0f0d
+                );
+
+            position: relative;
         }
+
         .hero::before {
-            content: "F.Ö.H"; position: absolute; font-size: 180px; font-weight: bold;
-            color: rgba(199, 164, 59, 0.035); pointer-events: none;
+            content: "F.Ö.H";
+
+            position: absolute;
+
+            font-size: 180px;
+
+            font-weight: bold;
+
+            color: rgba(199, 164, 59, 0.035);
+
+            pointer-events: none;
         }
-        .hero h2 { font-size: 55px; letter-spacing: 12px; color: #c7a43b; }
-        .hero p { margin-top: 10px; font-size: 18px; color: #aaa; }
-        .date { margin-top: 30px; border: 1px solid #555; padding: 10px 25px; color: #ddd; letter-spacing: 3px; }
 
-        .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
-        .card { background: #171d18; border: 1px solid #303830; padding: 25px; min-height: 150px; transition: 0.2s; }
-        .card:hover { border-color: #c7a43b; transform: translateY(-3px); }
-        .card h3 { color: #c7a43b; margin-bottom: 12px; }
-        .card p { color: #aaa; line-height: 1.6; }
+        .hero h2 {
+            font-size: 55px;
 
-        .section-title { border-left: 5px solid #c7a43b; padding-left: 15px; margin-bottom: 30px; }
-        .section-title h2 { color: white; }
-        .section-title p { color: #777; margin-top: 5px; }
+            letter-spacing: 12px;
+
+            color: #c7a43b;
+        }
+
+        .hero p {
+            margin-top: 10px;
+
+            font-size: 18px;
+
+            color: #aaa;
+        }
+
+        .date {
+            margin-top: 30px;
+
+            border: 1px solid #555;
+
+            padding: 10px 25px;
+
+            color: #ddd;
+
+            letter-spacing: 3px;
+        }
+
+
+        /* KARTLAR */
+
+        .cards {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 20px;
+
+            margin-top: 30px;
+        }
+
+        .card {
+            background: #171d18;
+
+            border: 1px solid #303830;
+
+            padding: 25px;
+
+            min-height: 150px;
+
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            border-color: #c7a43b;
+
+            transform: translateY(-3px);
+        }
+
+        .card h3 {
+            color: #c7a43b;
+
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: #aaa;
+
+            line-height: 1.6;
+        }
+
+
+        /* BAŞLIKLAR */
+
+        .section-title {
+            border-left: 5px solid #c7a43b;
+
+            padding-left: 15px;
+
+            margin-bottom: 30px;
+        }
+
+        .section-title h2 {
+            color: white;
+        }
+
+        .section-title p {
+            color: #777;
+
+            margin-top: 5px;
+        }
+
+
+        /* OPERASYONLAR */
 
         .operation {
-            background: #171d18; border: 1px solid #303830; padding: 25px; margin-bottom: 15px;
-            display: flex; align-items: center; justify-content: space-between;
+            background: #171d18;
+
+            border: 1px solid #303830;
+
+            padding: 25px;
+
+            margin-bottom: 15px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
         }
-        .operation h3 { color: white; margin-bottom: 8px; }
-        .operation p { color: #888; }
-        .status { padding: 8px 15px; border: 1px solid #c7a43b; color: #c7a43b; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
 
-        .about { background: #171d18; border: 1px solid #303830; padding: 35px; line-height: 1.8; color: #aaa; }
-        .about strong { color: #c7a43b; }
+        .operation h3 {
+            color: white;
 
-        .personnel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .person { background: #171d18; border: 1px solid #303830; padding: 25px; text-align: center; }
+            margin-bottom: 8px;
+        }
+
+        .operation p {
+            color: #888;
+        }
+
+        .status {
+            padding: 8px 15px;
+
+            border: 1px solid #c7a43b;
+
+            color: #c7a43b;
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+            letter-spacing: 1px;
+        }
+
+
+        /* HAKKINDA */
+
+        .about {
+            background: #171d18;
+
+            border: 1px solid #303830;
+
+            padding: 35px;
+
+            line-height: 1.8;
+
+            color: #aaa;
+        }
+
+        .about strong {
+            color: #c7a43b;
+        }
+
+
+        /* PERSONEL */
+
+        .personnel {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 20px;
+        }
+
+        .person {
+            background: #171d18;
+
+            border: 1px solid #303830;
+
+            padding: 25px;
+
+            text-align: center;
+        }
+
         .avatar {
-            width: 70px; height: 70px; margin: auto; margin-bottom: 15px; border: 2px solid #c7a43b;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #c7a43b; font-size: 24px;
+            width: 70px;
+            height: 70px;
+
+            margin: auto;
+
+            margin-bottom: 15px;
+
+            border: 2px solid #c7a43b;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            color: #c7a43b;
+
+            font-size: 24px;
         }
-        .person h3 { color: white; }
-        .person p { color: #777; margin-top: 5px; }
 
-        footer { margin-top: 60px; border-top: 1px solid #303830; padding: 25px; text-align: center; color: #555; font-size: 12px; }
+        .person h3 {
+            color: white;
+        }
 
-        /* SOHBET STİLLERİ */
-        .chat-wrap { max-width: 900px; margin: auto; }
-        .chat-box { background: #171d18; border: 1px solid #303830; min-height: 560px; display: flex; flex-direction: column; }
-        .chat-header { padding: 18px 22px; border-bottom: 1px solid #303830; display: flex; justify-content: space-between; align-items: center; }
-        .chat-header h3 { color: #c7a43b; letter-spacing: 2px; }
-        .chat-header-actions { display: flex; align-items: center; gap: 15px; }
-        .online-count { color: #777; font-size: 12px; }
-        .btn-change-nick { background: transparent; border: 1px solid #303830; color: #aaa; padding: 4px 10px; font-size: 11px; cursor: pointer; transition: 0.2s; }
-        .btn-change-nick:hover { border-color: #c7a43b; color: #c7a43b; }
+        .person p {
+            color: #777;
 
-        .chat-messages { flex: 1; min-height: 400px; max-height: 500px; overflow-y: auto; padding: 22px; }
-        .chat-message { margin-bottom: 18px; }
-        .chat-message .nick { color: #c7a43b; font-weight: bold; font-size: 13px; margin-bottom: 4px; }
-        .chat-message .time { color: #555; font-size: 10px; margin-left: 8px; }
-        .chat-message .text { color: #ddd; line-height: 1.5; word-break: break-word; }
+            margin-top: 5px;
+        }
 
-        .chat-input-area { display: flex; gap: 10px; padding: 15px; border-top: 1px solid #303830; }
-        .chat-input-area input { flex: 1; background: #101410; border: 1px solid #303830; color: white; padding: 13px; outline: none; }
-        .chat-input-area input:focus { border-color: #c7a43b; }
-        .chat-input-area button { background: #c7a43b; color: #101410; border: none; padding: 0 22px; font-weight: bold; cursor: pointer; }
-        .chat-input-area button:hover { background: #dfc05c; }
 
-        .nick-panel { background: #171d18; border: 1px solid #303830; padding: 35px; text-align: center; margin-bottom: 20px; }
-        .nick-panel h3 { color: #c7a43b; margin-bottom: 10px; }
-        .nick-panel p { color: #777; margin-bottom: 20px; }
-        .nick-panel input { width: min(100%, 350px); background: #101410; border: 1px solid #303830; color: white; padding: 13px; outline: none; text-align: center; }
-        .nick-panel input:focus { border-color: #c7a43b; }
-        .nick-panel button { margin-left: 8px; padding: 13px 20px; border: none; background: #c7a43b; color: #101410; font-weight: bold; cursor: pointer; }
+        /* ALT */
+
+        footer {
+            margin-top: 60px;
+
+            border-top: 1px solid #303830;
+
+            padding: 25px;
+
+            text-align: center;
+
+            color: #555;
+
+            font-size: 12px;
+        }
+
+
+
+        /* EKİP SOHBETİ */
+
+        .chat-wrap {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .chat-box {
+            background: #171d18;
+            border: 1px solid #303830;
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid #303830;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            color: #c7a43b;
+            letter-spacing: 2px;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .online-count {
+            color: #777;
+            font-size: 12px;
+        }
+
+        .btn-change-nick {
+            background: transparent;
+            border: 1px solid #303830;
+            color: #aaa;
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-change-nick:hover {
+            border-color: #c7a43b;
+            color: #c7a43b;
+        }
+
+        .chat-messages {
+            flex: 1;
+            min-height: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 22px;
+        }
+
+        .chat-message {
+            margin-bottom: 18px;
+        }
+
+        .chat-message .nick {
+            color: #c7a43b;
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .chat-message .time {
+            color: #555;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+
+        .chat-message .text {
+            color: #ddd;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid #303830;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: #101410;
+            border: 1px solid #303830;
+            color: white;
+            padding: 13px;
+            outline: none;
+        }
+
+        .chat-input-area input:focus {
+            border-color: #c7a43b;
+        }
+
+        .chat-input-area button {
+            background: #c7a43b;
+            color: #101410;
+            border: none;
+            padding: 0 22px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .chat-input-area button:hover {
+            background: #dfc05c;
+        }
+
+        .nick-panel {
+            background: #171d18;
+            border: 1px solid #303830;
+            padding: 35px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .nick-panel h3 {
+            color: #c7a43b;
+            margin-bottom: 10px;
+        }
+
+        .nick-panel p {
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+        .nick-panel input {
+            width: min(100%, 350px);
+            background: #101410;
+            border: 1px solid #303830;
+            color: white;
+            padding: 13px;
+            outline: none;
+            text-align: center;
+        }
+
+        .nick-panel input:focus {
+            border-color: #c7a43b;
+        }
+
+        .nick-panel button {
+            margin-left: 8px;
+            padding: 13px 20px;
+            border: none;
+            background: #c7a43b;
+            color: #101410;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* MOBİL */
 
         @media(max-width: 800px) {
-            header { height: auto; flex-direction: column; padding: 15px; }
-            nav { width: 100%; overflow-x: auto; }
-            nav button { padding: 15px; white-space: nowrap; }
-            .cards, .personnel { grid-template-columns: 1fr; }
-            .hero h2 { font-size: 35px; }
-            .chat-input-area { flex-direction: column; }
-            .chat-input-area button { padding: 12px; }
-            .nick-panel button { margin-left: 0; margin-top: 10px; }
-            .operation { flex-direction: column; align-items: flex-start; gap: 15px; }
+
+            header {
+                height: auto;
+
+                flex-direction: column;
+
+                padding: 15px;
+            }
+
+            nav {
+                width: 100%;
+
+                overflow-x: auto;
+            }
+
+            nav button {
+                padding: 15px;
+
+                white-space: nowrap;
+            }
+
+            .cards,
+            .personnel {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h2 {
+                font-size: 35px;
+            }
+
+
+            .chat-input-area {
+                flex-direction: column;
+            }
+
+            .chat-input-area button {
+                padding: 12px;
+            }
+
+            .nick-panel button {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+
+            .operation {
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 15px;
+            }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
+
 <header>
+
     <div class="logo">
-        <div class="logo-symbol">F</div>
-        <div class="logo-text">
-            <h1>F.Ö.H</h1>
-            <p>FINDIK ÖZEL HAREKÂT</p>
+
+        <div class="logo-symbol">
+            F
         </div>
+
+        <div class="logo-text">
+
+            <h1>F.Ö.H</h1>
+
+            <p>
+                FINDIK ÖZEL HAREKÂT
+            </p>
+
+        </div>
+
     </div>
+
+
     <nav>
-        <button class="tab active" onclick="showPage('ana', this)">ANA SAYFA</button>
-        <button class="tab" onclick="showPage('operasyon', this)">GELECEK OPERASYONLAR</button>
-        <button class="tab" onclick="showPage('hakkinda', this)">F.Ö.H HAKKINDA</button>
-        <button class="tab" onclick="showPage('personel', this)">PERSONEL ARŞİVİ</button>
-        <button class="tab" onclick="showPage('sohbet', this)">EKİP SOHBETİ</button>
+
+        <button
+            class="tab active"
+            onclick="showPage('ana', this)"
+        >
+            ANA SAYFA
+        </button>
+
+
+        <button
+            class="tab"
+            onclick="showPage('operasyon', this)"
+        >
+            GELECEK OPERASYONLAR
+        </button>
+
+
+        <button
+            class="tab"
+            onclick="showPage('hakkinda', this)"
+        >
+            F.Ö.H HAKKINDA
+        </button>
+
+
+        <button
+            class="tab"
+            onclick="showPage('personel', this)"
+        >
+            PERSONEL ARŞİVİ
+        </button>
+
+        <button
+            class="tab"
+            onclick="showPage('sohbet', this)"
+        >
+            EKİP SOHBETİ
+        </button>
+
     </nav>
+
 </header>
 
+
+
 <main>
-    <section id="ana" class="page active">
+
+
+    <!-- ANA SAYFA -->
+
+    <section
+        id="ana"
+        class="page active"
+    >
+
         <div class="hero">
-            <h2>F.Ö.H</h2>
-            <p>FINDIK ÖZEL HAREKÂT</p>
-            <div class="date">KURULUŞ TARİHİ : 29.07.2026</div>
+
+            <h2>
+                F.Ö.H
+            </h2>
+
+            <p>
+                FINDIK ÖZEL HAREKÂT
+            </p>
+
+            <div class="date">
+
+                KURULUŞ TARİHİ :
+                29.07.2026
+
+            </div>
+
         </div>
+
+
+
         <div class="cards">
+
+
+            <!-- OPERASYON DURUMU -->
+
             <div class="card">
-                <h3>OPERASYON DURUMU</h3>
-                <p>Fındık sezonu operasyonu devam etmekte.</p>
+
+                <h3>
+                    OPERASYON DURUMU
+                </h3>
+
+                <p>
+                    Fındık sezonu operasyonu
+                    devam etmekte.
+                </p>
+
             </div>
+
+
+
+            <!-- PERSONEL -->
+
             <div class="card">
-                <h3>AKTİF PERSONEL</h3>
-                <p>5 F.Ö.H personeli görevde.</p>
+
+                <h3>
+                    AKTİF PERSONEL
+                </h3>
+
+                <p>
+                    5 F.Ö.H personeli görevde.
+                </p>
+
             </div>
+
+
+
+            <!-- FINDIK FİYATI -->
+
             <div class="card">
-                <h3>HAFIZ OĞLU FINDIK</h3>
-                <p>50 Randıman<br><strong style="color:#c7a43b; font-size:24px;">150 TL</strong></p>
+
+                <h3>
+                    HAFIZ OĞLU FINDIK
+                </h3>
+
+                <p>
+                    50 Randıman
+                    <br>
+                    <strong style="color:#c7a43b; font-size:24px;">
+                        150 TL
+                    </strong>
+                </p>
+
             </div>
+
+
         </div>
+
     </section>
 
-    <section id="operasyon" class="page">
+
+
+    <!-- GELECEK OPERASYONLAR -->
+
+    <section
+        id="operasyon"
+        class="page"
+    >
+
         <div class="section-title">
-            <h2>GELECEK OPERASYONLAR</h2>
-            <p>F.Ö.H operasyon planlama merkezi</p>
+
+            <h2>
+                GELECEK OPERASYONLAR
+            </h2>
+
+            <p>
+                F.Ö.H operasyon planlama merkezi
+            </p>
+
         </div>
+
+
+
         <div class="operation">
+
             <div>
-                <h3>OPERASYON ÖĞLENE MERCİMEK</h3>
-                <p>Bölge: AMK BAYIRI</p>
-                <p>Tarih: 31.08.2026</p>
+
+                <h3>
+                    OPERASYON ÖĞLENE MERCİMEK
+                </h3>
+
+                <p>
+                    Bölge:
+                    AMK BAYIRI
+                </p>
+
+                <p>
+                    Tarih:
+                    31.08.2026
+                </p>
+
             </div>
-            <span class="status">PLANLANIYOR</span>
+
+            <span class="status">
+                PLANLANIYOR
+            </span>
+
         </div>
+
+
+
         <div class="operation">
+
             <div>
-                <h3>OPERASYON AKŞAMA CEBECİ</h3>
-                <p>Bölge: Aşaki Tarla.</p>
-                <p>Tarih: 29.08.2026</p>
+
+                <h3>
+                    OPERASYON AKŞAMA CEBECİ
+                </h3>
+
+                <p>
+                    Bölge:
+                    Aşaki Tarla.
+                </p>
+
+                <p>
+                    Tarih:
+                    29.08.2026
+                </p>
+
             </div>
-            <span class="status">BEKLEMEDE</span>
+
+            <span class="status">
+                BEKLEMEDE
+            </span>
+
         </div>
+
+
+
         <div class="operation">
+
             <div>
-                <h3>OPERASYON GERİDE TIRMIK BIRAKMA</h3>
-                <p>Bölge: █████████</p>
-                <p>Tarih: GİZLİ</p>
+
+                <h3>
+                    OPERASYON GERİDE TIRMIK BIRAKMA
+                </h3>
+
+                <p>
+                    Bölge:
+                    █████████
+                </p>
+
+                <p>
+                    Tarih:
+                    GİZLİ
+                </p>
+
             </div>
-            <span class="status">GİZLİ</span>
+
+            <span class="status">
+                GİZLİ
+            </span>
+
         </div>
+
     </section>
 
-    <section id="hakkinda" class="page">
+
+
+    <!-- F.Ö.H HAKKINDA -->
+
+    <section
+        id="hakkinda"
+        class="page"
+    >
+
         <div class="section-title">
-            <h2>F.Ö.H HAKKINDA</h2>
-            <p>Fındık Özel Harekât</p>
+
+            <h2>
+                F.Ö.H HAKKINDA
+            </h2>
+
+            <p>
+                Fındık Özel Harekât
+            </p>
+
         </div>
+
+
+
         <div class="about">
-            <p><strong>F.Ö.H (Fındık Özel Harekât)</strong>, 29 Temmuz 2026 tarihinde kurulmuş, sezon içerisinde fındığın güvenli ve kayıp olmadan tarladan çıkarılmasını hedefleyen TSK'nın en önemli Özel Harekât birimidir.</p>
+
+            <p>
+
+                <strong>
+                    F.Ö.H (Fındık Özel Harekât)
+                </strong>,
+
+                29 Temmuz 2026 tarihinde kurulmuş,
+
+                sezon içerisinde fındığın güvenli
+                ve kayıp olmadan tarladan
+                çıkarılmasını hedefleyen
+
+                TSK'nın en önemli
+                Özel Harekât birimidir.
+
+            </p>
+
+
             <br>
-            <p>Birimin temel amacı, fındık sezonu boyunca operasyonların düzenli şekilde yürütülmesini sağlamak ve fındığın tarladan güvenli şekilde çıkarılmasını sağlamaktır.</p>
+
+
+            <p>
+
+                Birimin temel amacı,
+
+                fındık sezonu boyunca
+                operasyonların düzenli
+                şekilde yürütülmesini sağlamak
+                ve fındığın tarladan güvenli
+                şekilde çıkarılmasını sağlamaktır.
+
+            </p>
+
+
             <br>
-            <p><strong>PERSONEL SAYISI:</strong> 5</p>
+
+
+            <p>
+
+                <strong>
+                    PERSONEL SAYISI:
+                </strong>
+
+                5
+
+            </p>
+
         </div>
+
     </section>
 
-    <section id="personel" class="page">
+
+
+    <!-- PERSONEL ARŞİVİ -->
+
+    <section
+        id="personel"
+        class="page"
+    >
+
         <div class="section-title">
-            <h2>PERSONEL ARŞİVİ</h2>
-            <p>F.Ö.H personel kadrosu</p>
+
+            <h2>
+                PERSONEL ARŞİVİ
+            </h2>
+
+            <p>
+                F.Ö.H personel kadrosu
+            </p>
+
         </div>
+
+
+
         <div class="personnel">
-            <div class="person"><div class="avatar">D</div><h3>Dilek ŞİMŞEK</h3><p>Genel Müdür</p></div>
-            <div class="person"><div class="avatar">H</div><h3>Hasan DURHAN</h3><p>Master Plan Uzmanı</p></div>
-            <div class="person"><div class="avatar">B</div><h3>Boran ŞİMŞEK</h3><p>Baş Uzman Amele</p></div>
-            <div class="person"><div class="avatar">R</div><h3>Rüzgar ŞİMŞEK</h3><p>Görev Kontrol.</p></div>
-            <div class="person"><div class="avatar">A</div><h3>Alper ŞAHİN</h3><p>Kovuldu</p></div>
+
+
+            <!-- 1 -->
+
+            <div class="person">
+
+                <div class="avatar">
+                    D
+                </div>
+
+                <h3>
+                    Dilek ŞİMŞEK
+                </h3>
+
+                <p>
+                    Genel Müdür
+                </p>
+
+            </div>
+
+
+
+            <!-- 2 -->
+
+            <div class="person">
+
+                <div class="avatar">
+                    H
+                </div>
+
+                <h3>
+                    Hasan DURHAN
+                </h3>
+
+                <p>
+                    Master Plan Uzmanı
+                </p>
+
+            </div>
+
+
+
+            <!-- 3 -->
+
+            <div class="person">
+
+                <div class="avatar">
+                    B
+                </div>
+
+                <h3>
+                    Boran ŞİMŞEK
+                </h3>
+
+                <p>
+                   Baş Uzman Amele
+                </p>
+
+            </div>
+
+
+
+            <!-- 4 -->
+
+            <div class="person">
+
+                <div class="avatar">
+                    R
+                </div>
+
+                <h3>
+                    Rüzgar ŞİMŞEK
+                </h3>
+
+                <p>
+                    Görev Kontrol.
+                </p>
+
+            </div>
+
+
+
+            <!-- 5 -->
+
+            <div class="person">
+
+                <div class="avatar">
+                    A
+                </div>
+
+                <h3>
+                    Alper ŞAHİN
+                </h3>
+
+                <p>
+                    Kovuldu
+                </p>
+
+            </div>
+
+
         </div>
+
     </section>
 
-    <section id="sohbet" class="page">
+
+
+    <!-- EKİP SOHBETİ -->
+
+    <section
+        id="sohbet"
+        class="page"
+    >
+
         <div class="section-title">
             <h2>EKİP SOHBETİ</h2>
             <p>F.Ö.H personel iletişim merkezi</p>
         </div>
+
         <div class="chat-wrap">
+
             <div class="nick-panel" id="nickPanel">
                 <h3>EKİP SOHBETİNE GİRİŞ</h3>
                 <p>Sohbette kullanacağın nicki belirle.</p>
-                <input id="nickInput" type="text" maxlength="20" placeholder="Nickini yaz..." autocomplete="off">
-                <button onclick="setNick()">SOHBETE GİR</button>
+
+                <input
+                    id="nickInput"
+                    type="text"
+                    maxlength="20"
+                    placeholder="Nickini yaz..."
+                    autocomplete="off"
+                >
+
+                <button onclick="setNick()">
+                    SOHBETE GİR
+                </button>
             </div>
 
             <div class="chat-box" id="chatBox" style="display:none;">
+
                 <div class="chat-header">
                     <h3>F.Ö.H / EKİP SOHBETİ</h3>
                     <div class="chat-header-actions">
@@ -247,93 +1149,184 @@
                         <button class="btn-change-nick" onclick="changeNick()">NICK DEĞİŞTİR</button>
                     </div>
                 </div>
+
                 <div class="chat-messages" id="chatMessages">
                     <div class="chat-message">
                         <div class="nick">SİSTEM</div>
-                        <div class="text">Geçici RAM sohbetine hoş geldin. (Sayfayı yenileyince mesajlar silinir)</div>
+                        <div class="text">
+                            Ekip sohbetine hoş geldin.
+                        </div>
                     </div>
                 </div>
+
                 <div class="chat-input-area">
-                    <input id="messageInput" type="text" maxlength="500" placeholder="Mesaj yaz..." autocomplete="off">
-                    <button onclick="sendMessage()">GÖNDER</button>
+                    <input
+                        id="messageInput"
+                        type="text"
+                        maxlength="500"
+                        placeholder="Mesaj yaz..."
+                        autocomplete="off"
+                    >
+
+                    <button onclick="sendMessage()">
+                        GÖNDER
+                    </button>
                 </div>
+
             </div>
+
         </div>
+
     </section>
+
 </main>
 
+
+
 <footer>
-    F.Ö.H — FINDIK ÖZEL HAREKÂT<br>29.07.2026<br><br>29.07.2026 / Biz Çalışırız Fındık Ve Potan İçin.
+
+    F.Ö.H — FINDIK ÖZEL HAREKÂT
+
+    <br>
+
+    29.07.2026
+
+    <br><br>
+
+    29.07.2026 / Biz Çalışırız Fındık Ve Potan İçin.
+
 </footer>
 
+
+
 <script>
+
     function showPage(pageId, button) {
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-        document.getElementById(pageId).classList.add("active");
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+
+        const pages =
+            document.querySelectorAll(".page");
+
+        pages.forEach(function(page) {
+
+            page.classList.remove("active");
+
+        });
+
+        document
+            .getElementById(pageId)
+            .classList.add("active");
+
+        const tabs =
+            document.querySelectorAll(".tab");
+
+        tabs.forEach(function(tab) {
+
+            tab.classList.remove("active");
+
+        });
+
         button.classList.add("active");
+
     }
 
-    // TARAYICI RAM İÇİ CANLI KANAL (Hiçbir sunucu/api gerekmez)
-    const chatChannel = new BroadcastChannel('foh_ram_chat');
+    /* FIREBASE YAPILANDIRMASI */
+    // Ücretsiz Firebase Console (https://console.firebase.google.com/) üzerinden aldığınız bilgileri buraya ekleyin:
+    const firebaseConfig = {
+        apiKey: "FIREBASE_API_KEY_GIRINIZ",
+        authDomain: "PROJE_ADI.firebaseapp.com",
+        databaseURL: "https://PROJE_ADI-default-rtdb.firebaseio.com",
+        projectId: "PROJE_ADI",
+        storageBucket: "PROJE_ADI.appspot.com",
+        messagingSenderId: "SENDER_ID",
+        appId: "APP_ID"
+    };
 
-    let chatNick = "";
+    let isFirebaseReady = false;
+
+    // Firebase başlatma kontrolü
+    if (firebaseConfig.apiKey !== "FIREBASE_API_KEY_GIRINIZ") {
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+        var messagesRef = database.ref("messages");
+        isFirebaseReady = true;
+    }
+
+    let chatNick = localStorage.getItem("fohNick") || "";
 
     function setNick() {
         const input = document.getElementById("nickInput");
         const nick = input.value.trim();
-        if (!nick) { alert("Lütfen bir nick belirle."); return; }
+
+        if (!nick) {
+            alert("Lütfen bir nick belirle.");
+            return;
+        }
 
         chatNick = nick;
+        localStorage.setItem("fohNick", chatNick);
 
         document.getElementById("nickPanel").style.display = "none";
         document.getElementById("chatBox").style.display = "flex";
         document.getElementById("currentNick").textContent = "GİRİŞ: " + chatNick;
+
+        if (isFirebaseReady) {
+            listenMessages();
+        }
     }
 
     function changeNick() {
+        localStorage.removeItem("fohNick");
         chatNick = "";
         document.getElementById("chatBox").style.display = "none";
         document.getElementById("nickPanel").style.display = "block";
         document.getElementById("nickInput").value = "";
+        document.getElementById("nickInput").focus();
     }
 
-    document.getElementById("nickInput")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") setNick();
+    document.getElementById("nickInput")?.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            setNick();
+        }
     });
 
     function sendMessage() {
         const input = document.getElementById("messageInput");
         const message = input.value.trim();
+
         if (!message || !chatNick) return;
 
         const now = new Date();
-        const time = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+        const time =
+            String(now.getHours()).padStart(2, "0") +
+            ":" +
+            String(now.getMinutes()).padStart(2, "0");
 
-        const msgData = { nick: chatNick, text: message, time: time };
-
-        // 1. Kendi ekranına mesajı yaz
-        renderMessage(msgData.nick, msgData.text, msgData.time);
-
-        // 2. O an açık olan diğer sekmelere RAM üzerinden gönder
-        chatChannel.postMessage(msgData);
+        if (isFirebaseReady) {
+            // Firebase Veritabanına Anlık Kaydet
+            messagesRef.push({
+                nick: chatNick,
+                text: message,
+                time: time,
+                timestamp: Date.now()
+            });
+        } else {
+            // Firebase kurulu değilse geçici lokal gösterim
+            renderMessage(chatNick, message, time);
+        }
 
         input.value = "";
         input.focus();
     }
-
-    // Diğer açık sekmelerden gelen mesajı yakala ve ekrana bas
-    chatChannel.onmessage = function(event) {
-        const data = event.data;
-        renderMessage(data.nick, data.text, data.time);
-    };
 
     function renderMessage(nick, text, time) {
         const container = document.getElementById("chatMessages");
         const item = document.createElement("div");
         item.className = "chat-message";
 
-        item.innerHTML = '<div class="nick"></div><div class="text"></div>';
+        item.innerHTML =
+            '<div class="nick"></div>' +
+            '<div class="text"></div>';
+
         item.querySelector(".nick").textContent = nick + " ";
 
         const timeSpan = document.createElement("span");
@@ -347,10 +1340,47 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    document.getElementById("messageInput")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") sendMessage();
-    });
+    function listenMessages() {
+        if (!isFirebaseReady) return;
+
+        // Daha önce eklenen event listener'ı temizle
+        messagesRef.off();
+
+        // Son 100 mesajı dinle ve canlı olarak ekrana aktar
+        messagesRef.limitToLast(100).on("child_added", function(snapshot) {
+            const data = snapshot.val();
+            renderMessage(data.nick, data.text, data.time);
+        });
+    }
+
+    document.getElementById("messageInput")?.addEventListener(
+        "keydown",
+        function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    );
+
+    // Oturum Kontrolü
+    if (chatNick) {
+        document.getElementById("nickPanel").style.display = "none";
+        document.getElementById("chatBox").style.display = "flex";
+        document.getElementById("currentNick").textContent = "GİRİŞ: " + chatNick;
+        
+        if (isFirebaseReady) {
+            listenMessages();
+        }
+    }
+
 </script>
 
 </body>
+
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(updated_html)
+
+print("Güncellenmiş index.html dosyası başarıyla oluşturuldu.")
