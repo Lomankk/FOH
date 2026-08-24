@@ -301,6 +301,61 @@
             color: #888;
         }
 
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .news-card {
+            background: #171d18;
+            border: 1px solid #303830;
+            border-top: 4px solid #c7a43b;
+            padding: 24px;
+            min-height: 210px;
+            display: flex;
+            flex-direction: column;
+            transition: 0.2s;
+        }
+
+        .news-card:hover {
+            border-color: #c7a43b;
+            transform: translateY(-3px);
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 24px;
+            color: #c7a43b;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .news-card h3 {
+            color: white;
+            font-size: 19px;
+            line-height: 1.35;
+            margin-bottom: 12px;
+        }
+
+        .news-card p {
+            color: #999;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .news-link {
+            margin-top: auto;
+            padding-top: 20px;
+            color: #c7a43b;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
         .status {
             padding: 8px 15px;
 
@@ -442,7 +497,8 @@
             }
 
             .cards,
-            .personnel {
+            .personnel,
+            .news-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -996,6 +1052,40 @@
                 <p>
                     F.Ö.H Kuruluşundan bu yana olan en son haberler
                 </p>
+            </div>
+
+            <div class="news-grid">
+
+                <article class="news-card">
+                    <div class="news-meta">
+                        <span>F.Ö.H BÜLTENİ</span>
+                        <span>24.08.2026</span>
+                    </div>
+                    <h3>Hasan DURHAN Gaflete Gelmeyin Diyor</h3>
+                    <p>Hasan DURHAN, Fındık Sezonu Bitmek Üzere Ama Siz Gaflete Gelmeyin Allah Büyük Moruk. Dedi</p>
+                    <span class="news-link">AYRINTILI BİLGİ &rarr;</span>
+                </article>
+
+                <article class="news-card">
+                    <div class="news-meta">
+                        <span>Yapıyorum bu sporu</span>
+                        <span>12.08.2026</span>
+                    </div>
+                    <h3>Yazılımcılarımız Olayı Çözdü</h3>
+                    <p>Yazılımcılarımız, Diyorlarki Bu Sitede İş Var Tek Sezonluk Bir Site Değil.</p>
+                    <span class="news-link">AYRINTILI BİLGİ &rarr;</span>
+                </article>
+
+                <article class="news-card">
+                    <div class="news-meta">
+                        <span>DEDİ GODU</span>
+                        <span>20.08.2026</span>
+                    </div>
+                    <h3>Alper ŞAHİN Grubu Terk Etti Ortalık Karıştı</h3>
+                    <p>Alper ŞAHİN Grubu Terk Etmesinin Üzerine Boran ŞİMŞEK Kafayı Çıldırdı Boran ŞiMŞEK: Ben Senin Boktan grubunda duruyorum sen niye çıktın. </p>
+                    <span class="news-link">AYRINTILI BİLGİ &rarr;</span>
+                </article>
+
             </div>
 
         </section>
