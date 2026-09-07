@@ -648,13 +648,21 @@
             <p>F.Ö.H sitesinin en son güncellemeleri</p>
         </div>
 
+                        <div class="operation">
+            <div>
+                <h3>07.09.2026</h3>
+                <p>Eğitim merkezindeki Mobil Dokunma Hattası Düzeltildi.</p>
+            </div>
+            <span class="status">YENİ</span>
+        </div>
+
 
                 <div class="operation">
             <div>
                 <h3>06.09.2026</h3>
                 <p>BÜYÜK GÜNCELEME: Sitemize EĞİTİM MERKEZİ Eklendi.</p>
             </div>
-            <span class="status">YENİ</span>
+            <span class="status">ESKİ</span>
         </div>
 
                 <div class="operation">
@@ -907,44 +915,61 @@
         }
         
         
-        canvas.addEventListener('click', function(e) {
-            if (!oyunCalisiyor) {
-                oyunBaslat();
-                return;
-            }
-            
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            
-            
-            const mesafe = Math.sqrt(Math.pow(mouseX - topX, 2) + Math.pow(mouseY - topY, 2));
-            
-            if (mesafe <= topYaricap + 15) {
-                skor += 10;
-                skorGuncelle();
-                
-                
-                yakalamaEfekti(mouseX, mouseY);
-                
-                
-                topX = Math.random() * (canvas.width - 2 * topYaricap) + topYaricap;
-                topY = Math.random() * (canvas.height - 2 * topYaricap) + topYaricap;
-                
-                
-                topHizX *= 1.1;
-                topHizY *= 1.1;
-                
-                
-                const maxHiz = 10;
-                const mevcutHiz = Math.sqrt(topHizX * topHizX + topHizY * topHizY);
-                if (mevcutHiz > maxHiz) {
-                    const oran = maxHiz / mevcutHiz;
-                    topHizX *= oran;
-                    topHizY *= oran;
-                }
-            }
-        });
+function dokunmaIslemi(clientX, clientY) {
+    if (!oyunCalisiyor) {
+        oyunBaslat();
+        return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    
+   
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    
+    const mouseX = (clientX - rect.left) * scaleX;
+    const mouseY = (clientY - rect.top) * scaleY;
+
+    
+    const mesafe = Math.sqrt(Math.pow(mouseX - topX, 2) + Math.pow(mouseY - topY, 2));
+
+    if (mesafe <= topYaricap + 15) {
+        skor += 10;
+        skorGuncelle();
+
+        yakalamaEfekti(mouseX, mouseY);
+
+        topX = Math.random() * (canvas.width - 2 * topYaricap) + topYaricap;
+        topY = Math.random() * (canvas.height - 2 * topYaricap) + topYaricap;
+
+        topHizX *= 1.1;
+        topHizY *= 1.1;
+
+        const maxHiz = 10;
+        const mevcutHiz = Math.sqrt(topHizX * topHizX + topHizY * topHizY);
+        if (mevcutHiz > maxHiz) {
+            const oran = maxHiz / mevcutHiz;
+            topHizX *= oran;
+            topHizY *= oran;
+        }
+    }
+}
+
+
+canvas.addEventListener('click', function(e) {
+    dokunmaIslemi(e.clientX, e.clientY);
+});
+
+
+canvas.addEventListener('touchstart', function(e) {
+    
+    e.preventDefault(); 
+    if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        dokunmaIslemi(touch.clientX, touch.clientY);
+    }
+}, { passive: false });
         
         
         function yakalamaEfekti(x, y) {
